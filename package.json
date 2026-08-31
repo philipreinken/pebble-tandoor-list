@@ -1,13 +1,18 @@
 {
   "name": "tandoor-list",
-  "author": "MakeAwesomeHappen",
-  "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "author": "Philip Reinken",
+  "version": "0.0.1",
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "@moddable/pebbleproxy": "^0.2.0",
+    "@rebble/clay": "^1.1.0"
+  },
   "pebble": {
-    "displayName": "tandoor-list",
-    "uuid": "6eace97b-df74-4420-85d6-76c15939e87f",
+    "displayName": "Tandoor Recipes Shopping List",
+    "uuid": "a8e7bf22-2b1f-4861-bb38-b62b9cd010e4",
     "projectType": "moddable",
     "sdkVersion": "3",
     "enableMultiJS": true,
@@ -16,12 +21,23 @@
       "gabbro"
     ],
     "watchapp": {
-      "watchface": true
+      "watchface": false
     },
-    "messageKeys": [
-      "dummy"
+    "capabilities": [
+      "configurable"
     ],
-    "resources": {
+  	"messageKeys": [
+      "type",
+      "id",
+      "name",
+      "amount",
+      "unit",
+      "checked",
+      "index",
+      "baseUrl",
+      "apiToken"
+    ],
+  	"resources": {
       "media": []
     }
   }
