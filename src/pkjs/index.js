@@ -1,177 +1,89 @@
-var Clay = require('@rebble/clay');
-var clayConfig = require('./config');
-var clay = new Clay(clayConfig);
+const Logger = require('./logger');
+const Constants = require('./constants');
+const TandoorClient = require('./tandoor');
 
-var moddableProxy = require('@moddable/pebbleproxy');
+const Clay = require('@rebble/clay');
+const clayConfig = require('./config');
 
-const BASE_URL_KEY = 'baseUrl';
-const API_TOKEN_KEY = 'apiToken';
+const clay = new Clay(clayConfig);
 
-function log(msg) {
-  console.log('PKJS: ' + msg);
-}
+const log = new Logger('PKJS');
 
-function loadSettings() {
-  var baseUrl = localStorage.getItem(BASE_URL_KEY) || '';
-  var apiToken = localStorage.getItem(API_TOKEN_KEY) || '';
+log.info('init');
 
-  try {
-    var claySettings = clay.getSettings();
-    baseUrl = String(claySettings.baseUrl || '');
-    apiToken = String(claySettings.apiToken || '');
-  } catch (e) {
-    log('Clay settings error: ' + e.message);
-  }
+log.info(JSON.stringify(Constants));
 
-  return {
-    baseUrl: baseUrl.replace(/\/$/, ''),
-    apiToken: apiToken
-  };
-}
+Pebble.addEventListener('ready', function (e) {
+  log.info('PebbleKit JS ready');
 
-function saveSettings(baseUrl, apiToken) {
-  baseUrl = String(baseUrl || '').replace(/\/$/, '');
-  apiToken = String(apiToken || '');
-  localStorage.setItem(BASE_URL_KEY, baseUrl);
-  localStorage.setItem(API_TOKEN_KEY, apiToken);
-  log('Saved baseUrl=' + baseUrl);
-}
-
-function sendToWatch(type, payload) {
-  payload = payload || {};
-  payload.type = type;
-  log('sendToWatch: ' + type + ' ' + JSON.stringify(payload));
-  if (Pebble) {
-    Pebble.sendAppMessage(payload);
-  }
-}
-
-function fetchList(url, accumulated) {
-  var settings = loadSettings();
-  log('fetchList settings baseUrl=' + settings.baseUrl + ' token=' + (settings.apiToken ? 'yes' : 'no'));
-
-  if (!settings.baseUrl || !settings.apiToken) {
-    sendToWatch('error', { name: 'Not configured' });
-    return;
-  }
-
-  var listUrl = url || settings.baseUrl + '/api/shopping-list-entry/';
-  log('fetchList URL: ' + listUrl);
-
-  fetch(listUrl, {
-    method: 'GET',
-    headers: {
-      Authorization: 'Bearer ' + settings.apiToken,
-      Accept: 'application/json'
-    }
-  })
-    .then(function(response) {
-      log('fetchList status: ' + response.status);
-      if (!response.ok) {
-        throw new Error('HTTP ' + response.status);
-      }
-      return response.text();
-    })
-    .then(function(text) {
-      log('fetchList response: ' + text.substring(0, 500));
-      var data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error('JSON parse failed: ' + e.message);
-      }
-
-      var results = data.results || data;
-      var next = data.next || null;
-      var all = (accumulated || []).concat(results);
-      log('fetchList results count: ' + results.length + ' total: ' + all.length);
-
-      if (next) {
-        log('fetchList next: ' + next);
-        fetchList(next, all);
-      } else {
-        sendToWatch('clear');
-        all.forEach(function(entry, i) {
-          log('entry ' + i + ': ' + JSON.stringify(entry));
-          sendToWatch('entry', {
-            id: entry.id,
-            name: entry.food_name || (entry.food && entry.food.name) || 'Unknown',
-            amount: String(entry.amount || ''),
-            unit: String(entry.unit_name || (entry.unit && entry.unit.name) || ''),
-            checked: entry.checked ? 1 : 0,
-            index: i
-          });
-        });
-      }
-    })
-    .catch(function(err) {
-      log('fetchList error: ' + err.message);
-      sendToWatch('error', { name: err.message || String(err) });
-    });
-}
-
-function toggleEntry(id, checked) {
-  var settings = loadSettings();
-
-  fetch(settings.baseUrl + '/api/shopping-list-entry/' + id + '/', {
-    method: 'PATCH',
-    headers: {
-      Authorization: 'Bearer ' + settings.apiToken,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ checked: checked })
-  })
-    .then(function(response) {
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      return response.json();
-    })
-    .then(function(updated) {
-      sendToWatch('updated', {
-        id: updated.id,
-        checked: updated.checked ? 1 : 0
-      });
-    })
-    .catch(function(err) {
-      sendToWatch('error', { name: err.message || String(err) });
-    });
-}
-
-Pebble.addEventListener('ready', function(e) {
-  moddableProxy.readyReceived(e);
-  sendToWatch('clear');
-  fetchList();
+  Pebble.sendAppMessage({
+    shoppingList: []
+  });
 });
 
-Pebble.addEventListener('appmessage', function(e) {
-  if (moddableProxy.appMessageReceived(e)) return;
-
-  var dict = e.payload;
-  var type = dict.type;
-
-  if (type === 'refresh') {
-    fetchList();
-  } else if (type === 'toggle') {
-    toggleEntry(dict.id, dict.checked === 1);
-  }
+Pebble.addEventListener('appmessage', function (e) {
+  log.info('Message received from watch', JSON.stringify(e.payload));
 });
 
-Pebble.addEventListener('showConfiguration', function() {
+Pebble.addEventListener('showConfiguration', function () {
+  log.info('Show configuration');
+
   var url = clay.generateUrl();
   Pebble.openURL(url);
 });
 
-Pebble.addEventListener('webviewclosed', function(e) {
-  if (moddableProxy.webviewClosedReceived) {
-    moddableProxy.webviewClosedReceived(e);
+Pebble.addEventListener('webviewclosed', function (e) {
+  log.info('Webview closed', JSON.stringify(e.response));
+
+  if (webviewClosedReceived) {
+    webviewClosedReceived(e);
   }
 
   var options = {};
   try {
     options = JSON.parse(decodeURIComponent(e.response));
   } catch (err) {
-    return;
+    log.error('Error parsing configuration response', err);
   }
 
-  saveSettings(options.baseUrl.value, options.apiToken.value);
-  fetchList();
+  if (options[Constants.MSG_KEY_BASE_URL]) {
+    localStorage.setItem(Constants.MSG_KEY_BASE_URL, options[Constants.MSG_KEY_BASE_URL]);
+  } else {
+    log.warn(`${Constants.MSG_KEY_BASE_URL} not defined in options.`);
+  }
+
+  if (options[Constants.MSG_KEY_API_TOKEN]) {
+    localStorage.setItem(Constants.MSG_KEY_API_TOKEN, options[Constants.MSG_KEY_API_TOKEN]);
+  } else {
+    log.warn(`${Constants.MSG_KEY_API_TOKEN} not defined in options.`);
+  }
 });
+
+function getConfig(key) {
+  const val = localStorage.getItem(key);
+
+  if (val) {
+    return val;
+  } else {
+    throw new Error(`${key} not set! Please specify it in the settings.`)
+  }
+}
+
+const getBaseURL = getConfig.bind(this, Constants.MSG_KEY_BASE_URL);
+const getApiToken = getConfig.bind(this, Constants.MSG_KEY_API_TOKEN);
+
+/*
+try {
+  const tandoorClient = new TandoorClient(getBaseURL(), getApiToken())
+
+  tandoorClient.getShoppingList(function (err, res) {
+    if (err) {
+      log.error(err)
+    }
+
+    log.info(res)
+  })
+} catch (e) {
+  log.error(e)
+}
+*/

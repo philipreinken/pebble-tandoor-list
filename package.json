@@ -27,15 +27,9 @@
       "configurable"
     ],
   	"messageKeys": [
-      "type",
-      "id",
-      "name",
-      "amount",
-      "unit",
-      "checked",
-      "index",
       "baseUrl",
-      "apiToken"
+      "apiToken",
+      "shoppingList"
     ],
   	"resources": {
       "media": []

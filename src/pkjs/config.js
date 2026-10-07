@@ -41,4 +41,3 @@ module.exports = [
     "defaultValue": "Save Settings"
   }
 ];
-
