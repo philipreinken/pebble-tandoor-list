@@ -16,7 +16,7 @@ const headerStyle = new Style({ font: "bold 18px Gothic", color: "black" });
 const listStyle = new Style({ font: "bold 14px Gothic", color: "black" });
 
 const message = new Message({
-  keys: [Constants.MSG_KEY_SHOPPING_LIST],
+  keys: [Constants.MSG_KEY_BASE_URL, Constants.MSG_KEY_API_TOKEN, Constants.MSG_KEY_SHOPPING_LIST],
   onReadable() {
     const msg = this.read();
     msg.forEach((value, key) => {
