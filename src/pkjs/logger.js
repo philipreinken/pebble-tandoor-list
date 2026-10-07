@@ -4,18 +4,26 @@ module.exports = class Logger {
   }
 
   log(level, ...message) {
-    console.log(`[${this.prefix}][${level}] `, ...message);
+    const messages = [...message].map((msg) => {
+      if (typeof msg === 'object') {
+        return JSON.stringify(msg);
+      } else {
+        return msg;
+      }
+    });
+
+    console.log(`[${this.prefix}][${level}] `, ...messages);
   }
 
-  info(message) {
-    this.log('INFO', message);
+  info(...message) {
+    this.log('INFO', ...message);
   }
 
-  warn(message) {
-    this.log('WARN', message);
+  warn(...message) {
+    this.log('WARN', ...message);
   }
 
-  error(message) {
-    this.log('ERROR', message);
+  error(...message) {
+    this.log('ERROR', ...message);
   }
 }

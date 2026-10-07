@@ -11,29 +11,27 @@ const log = new Logger('PKJS');
 
 log.info('init');
 
-log.info(JSON.stringify(Constants));
+log.info(Constants);
 
 Pebble.addEventListener('ready', function (e) {
-  log.info('PebbleKit JS ready');
+  log.info('ready');
 
-  Pebble.sendAppMessage({
-    shoppingList: []
-  });
+  onReady(e);
 });
 
 Pebble.addEventListener('appmessage', function (e) {
-  log.info('Message received from watch', JSON.stringify(e.payload));
+  log.info('appmessage', e.payload);
 });
 
 Pebble.addEventListener('showConfiguration', function () {
-  log.info('Show configuration');
+  log.info('showConfiguration');
 
   var url = clay.generateUrl();
   Pebble.openURL(url);
 });
 
 Pebble.addEventListener('webviewclosed', function (e) {
-  log.info('Webview closed', JSON.stringify(e.response));
+  log.info('webviewclosed', e.response);
 
   if (webviewClosedReceived) {
     webviewClosedReceived(e);
@@ -72,18 +70,57 @@ function getConfig(key) {
 const getBaseURL = getConfig.bind(this, Constants.MSG_KEY_BASE_URL);
 const getApiToken = getConfig.bind(this, Constants.MSG_KEY_API_TOKEN);
 
-/*
-try {
-  const tandoorClient = new TandoorClient(getBaseURL(), getApiToken())
+function sendSequentially(msgKey, items, i) {
+  if (i >= items.length) {
+    return;
+  }
 
-  tandoorClient.getShoppingList(function (err, res) {
-    if (err) {
-      log.error(err)
+  log.info('sending', msgKey, items[i])
+  Pebble.sendAppMessage({
+      [msgKey]: JSON.stringify(items[i])
+    },
+    function () {
+      sendSequentially(msgKey, items, i + 1);
+    },
+    function (e) {
+      log.error('failed', i, e);
     }
-
-    log.info(res)
-  })
-} catch (e) {
-  log.error(e)
+  );
 }
-*/
+
+function onReady(e) {
+  try {
+    log.info('instantiating tandoor client...');
+    const tandoorClient = new TandoorClient(getBaseURL(), getApiToken())
+
+    tandoorClient.getShoppingList(function (err, res) {
+      if (err) {
+        log.error(err);
+      } else {
+        const msg = {};
+
+        if (res.results) {
+          log.info('retrieved shopping list', res.results);
+
+          const items = res.results
+            .filter(i => !i.checked)
+            .map(i => {
+              return {
+                id: i.id,
+                name: i.food.name,
+                checked: i.checked
+              }
+            });
+
+          sendSequentially(Constants.MSG_KEY_SHOPPING_LIST_ITEM, items, 0);
+        } else {
+          log.warn('results is empty');
+
+          return;
+        }
+      }
+    });
+  } catch (e) {
+    log.error(e);
+  }
+}

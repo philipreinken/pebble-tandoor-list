@@ -29,7 +29,8 @@
   	"messageKeys": [
       "baseUrl",
       "apiToken",
-      "shoppingList"
+      "shoppingList",
+      "shoppingListItem"
     ],
   	"resources": {
       "media": []

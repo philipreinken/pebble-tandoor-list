@@ -1,21 +1,27 @@
 module.exports = class TandoorClient {
   constructor(baseUrl, apiKey) {
+    if (!baseUrl) {
+      throw new Error("baseUrl not provided!");
+    }
+
+    if (!apiKey) {
+      throw new Error("apiKey not provided!");
+    }
+
     this.baseUrl = baseUrl;
     this.apiKey = apiKey;
   }
 
-  authenticatedRequest() {
-    const xhr = new XMLHttpRequest();
-
+  authenticateRequest(xhr) {
     xhr.setRequestHeader('Authorization', 'Bearer ' + this.apiKey);
     xhr.setRequestHeader('Content-Type', 'application/json');
-
-    return xhr;
   }
 
   getRequest(url, callback) {
-    const xhr = this.authenticatedRequest();
+    const xhr = new XMLHttpRequest();
+
     xhr.open('GET', url);
+    this.authenticateRequest(xhr);
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300) {
         callback(null, JSON.parse(xhr.responseText));
@@ -30,8 +36,10 @@ module.exports = class TandoorClient {
   }
 
   patchRequest(url, data, callback) {
-    const xhr = this.authenticatedRequest();
+    const xhr = new XMLHttpRequest();
+
     xhr.open('PATCH', url);
+    this.authenticateRequest(xhr);
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300) {
         callback(null, JSON.parse(xhr.responseText));
