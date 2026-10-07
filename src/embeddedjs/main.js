@@ -9,104 +9,147 @@ const log = new Logger('WTCH');
 
 log.info('init');
 
-log.info(Constants);
-
-const BUTTON_ID = {
-  UP: 0,
-  DOWN: 1,
-  SELECT: 2,
-  BACK: 3
-};
-
 const backgroundSkin = new Skin({ fill: "silver" });
 const headerSkin = new Skin({ fill: "white" });
 const headerStyle = new Style({ font: "bold 18px Gothic", color: "black" });
-const listStyle = new Style({ font: "bold 14px Gothic", horizontal: "left", color: "black" });
-const paleListStyle = new Style({ font: "bold 14px Gothic", horizontal: "left", color: "gray" });
-const selectedListStyle = new Style({ font: "bold 14px Gothic", horizontal: "left", color: "red" });
+const listStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "black" });
+const paleListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "gray" });
+const selectedListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "red" });
+
+const LIST_ITEM_HEIGHT = 30;
+
+class ListItemBehaviour extends Behavior {
+  onCreate(subject, data) {
+    this.$ = subject;
+    this.item = data;
+
+    this.onItemChecked(this.$, this.item.id, this.item.checked);
+  }
+
+  onSelectionChanged(subject, id) {
+    if (this.item.id === id) {
+      this.$.style = selectedListStyle;
+    } else if (this.item.checked) {
+      this.$.style = paleListStyle;
+    } else {
+      this.$.style = listStyle;
+    }
+  }
+
+  onItemChecked(subject, id, checked) {
+    if (this.item.id === id) {
+      this.item.checked = checked;
+    }
+
+    this.$.style = (this.item.checked) ? paleListStyle : listStyle;
+    this.$.string = `${(this.item.checked ? '[x]' : '[  ]')} ${this.item.name}`;
+  }
+
+  onListItemWaiting(subject, id) {
+    if (this.item.id === id) {
+      this.$.string = `  ${this.$.string}`;
+    }
+  }
+}
+
+const ListItem = Label.template($ => ({
+  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+  name: `item-${$.id}`,
+  Behavior: ListItemBehaviour
+}));
 
 class ShoppingListBehaviour extends Behavior {
-  onCreate() {
-    this.items = new Map();
-    this.selected = "";
+  onCreate(scroller, data) {
+    this.scroller = scroller;
+    this.column = scroller.first;
+    this.selected = null;
+  }
+
+  getItem(id) {
+    return this.column.content(`item-${id}`);
+  }
+
+  selectItem(id) {
+    this.selected = id;
+
+    this.scroller.distribute('onSelectionChanged', id);
   }
 
   onShoppingListItemReceived(subject, item) {
     log.info('onShoppingListItemReceived', subject, item);
 
-    this.items.set(item.id, item);
+    const loadingIndicator = this.column.content('loading-indicator');
+    const listItem = this.getItem(item.id);
 
-    if (this.items.size < 2) {
-      this.selected = item.id;
+    if (loadingIndicator) {
+      this.column.remove(loadingIndicator);
     }
 
-    this.updateBlocks(subject);
+    if (listItem) {
+      log.info('item present already', listItem);
+
+      this.column.distribute('onItemChecked', item.id, item.checked);
+    } else {
+      this.column.add(ListItem(item));
+    }
+
+    if (this.column.length < 2) {
+      this.selectItem(item.id);
+    } else if (this.selected) {
+      this.scroller.distribute('onSelectionChanged', this.selected);
+    }
   }
 
   onUpButton(subject) {
     log.info('onUpButton');
 
-    const neighbours = this.neighbours(this.selected);
+    const item = this.getItem(this.selected);
 
-    if (neighbours.previous) {
-      this.selected = neighbours.previous.key;
-      this.updateBlocks(subject);
+    if (item && item.previous) {
+      this.selectItem(item.previous.behavior.item.id);
     }
   }
 
   onDownButton(subject) {
     log.info('onDownButton');
 
-    const neighbours = this.neighbours(this.selected);
+    const item = this.getItem(this.selected);
 
-    if (neighbours.next) {
-      this.selected = neighbours.next.key;
-      this.updateBlocks(subject);
+    if (item && item.next) {
+      this.selectItem(item.next.behavior.item.id);
     }
   }
 
-  neighbours(key) {
-    const keys = [...this.items.keys()];
-    const i = keys.indexOf(key);
-    if (i === -1) return { previous: undefined, next: undefined };
+  onSelectButton(subject) {
+    log.info('onSelectButton');
 
-    return {
-      previous: i > 0
-        ? { key: keys[i - 1], value: this.items.get(keys[i - 1]) }
-        : undefined,
-      next: i < keys.length - 1
-        ? { key: keys[i + 1], value: this.items.get(keys[i + 1]) }
-        : undefined,
-    };
-  }
+    const listItem = this.getItem(this.selected);
 
-
-  renderBlock(item) {
-    const ret = {
-      spans: `${item.checked ? '[x]' : '[  ]'} ${item.name}`
-    };
-
-    if (item.checked) {
-      ret.style = paleListStyle;
+    if (!listItem) {
+      return;
     }
 
-    if (this.selected === item.id) {
-      ret.style = selectedListStyle;
+    const item = listItem.behavior.item;
+
+    item.checked = !item.checked;
+
+    const msg = [Constants.MSG_KEY_SHOPPING_LIST_ITEM, JSON.stringify(item)];
+
+    log.info('checking', msg);
+
+    message.write(new Map([msg]));
+
+    this.column.distribute('onListItemWaiting', item.id);
+  }
+
+  onSelectionChanged() {
+    let listItem = this.getItem(this.selected);
+
+    if (!listItem) {
+      return;
     }
 
-    return ret;
-  }
-
-  renderBlocks(items) {
-    return items.map(this.renderBlock.bind(this));
-  }
-
-  updateBlocks(subject) {
-    const items = [...this.items.values()];
-
-    log.info('updating list', items);
-
-    subject.blocks = this.renderBlocks(items);
+    this.scroller.scrollTo(0, listItem.bounds.y);
   }
 }
 
@@ -114,26 +157,29 @@ const application = new Application(null, {
   skin: backgroundSkin,
   contents: [
     new Container(null, {
-        top: 0, bottom: 0, left: 0, right: 0,
-        contents: [
-          new Column(null, {
-            top: 0, bottom: 0, left: 0, right: 0,
-            contents: [
-              new Label(null, {
-                top: 0, height: 30, left: 0, right: 0,
-                skin: headerSkin,
-                style: headerStyle,
-                string: "Tandoor Shopping List"
-              }),
-              new Text(null, {
-                top: 10, bottom: 10, left: 10, right: 10,
-                style: listStyle,
-                blocks: [],
-                Behavior: ShoppingListBehaviour
-              })
-            ]
-          })
-        ]
+      top: 0, bottom: 0, left: 6, right: 6,
+      contents: [
+        new Scroller(null, {
+          Behavior: ShoppingListBehaviour,
+          left: 0, right: 0, top: 0, bottom: 0,
+          active: true,
+          backgroundTouch: true,
+          clip: true,
+          contents: [
+            new Column(null, {
+              top: 0, left: 0, right: 0,
+              contents: [
+                new Label(null, {
+                  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+                  name: `loading-indicator`,
+                  style: listStyle,
+                  string: `Loading...`
+                })
+              ]
+            })
+          ]
+        })
+      ]
     })
   ]
 });
@@ -150,27 +196,27 @@ const buttonHandlers = {
   select: function (down) {
     log.info('handling button', down);
 
-    application.distribute(down ? 'onSelectButton' : 'onSelectButtonUp');
+    application.distribute((down > 0) ? 'onSelectButton' : 'onSelectButtonUp');
   },
   up: function (down) {
     log.info('handling button', down);
 
-    application.distribute(down ? 'onUpButton' : 'onUpButtonUp');
+    application.distribute((down > 0) ? 'onUpButton' : 'onUpButtonUp');
   },
   down: function (down) {
     log.info('handling button', down);
 
-    application.distribute(down ? 'onDownButton' : 'onDownButtonUp');
+    application.distribute((down > 0) ? 'onDownButton' : 'onDownButtonUp');
   },
   back: function (down) {
     log.info('handling button', down);
 
-    application.distribute(down ? 'onBackButton' : 'onBackButtonUp');
+    application.distribute((down > 0) ? 'onBackButton' : 'onBackButtonUp');
   }
 }
 
 const message = new Message({
-  keys: [Constants.MSG_KEY_BASE_URL, Constants.MSG_KEY_API_TOKEN, Constants.MSG_KEY_SHOPPING_LIST, Constants.MSG_KEY_SHOPPING_LIST_ITEM],
+  keys: [Constants.MSG_KEY_BASE_URL, Constants.MSG_KEY_API_TOKEN, Constants.MSG_KEY_SHOPPING_LIST, Constants.MSG_KEY_SHOPPING_LIST_ITEM, Constants.MSG_KEY_SHOPPING_LIST_ITEM_CHECKED],
   onReadable() {
     const msg = this.read();
     msg.forEach((value, key) => {

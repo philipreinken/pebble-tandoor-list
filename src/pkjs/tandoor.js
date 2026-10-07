@@ -1,20 +1,37 @@
 module.exports = class TandoorClient {
-  constructor(baseUrl, apiKey) {
+  constructor(baseUrl, apiKey, logger) {
     if (!baseUrl) {
       throw new Error("baseUrl not provided!");
     }
 
-    if (!apiKey) {
-      throw new Error("apiKey not provided!");
+    if (!apiKey || !(typeof apiKey === 'string') || !apiKey.startsWith('tda_')) {
+      throw new Error("apiKey not provided or incorrect!");
+    }
+
+    if (!logger) {
+      throw new Error("logger not provided!");
     }
 
     this.baseUrl = baseUrl;
     this.apiKey = apiKey;
+    this.log = logger;
+
+    this.log.debug('instantiated', baseUrl, apiKey);
   }
 
   authenticateRequest(xhr) {
-    xhr.setRequestHeader('Authorization', 'Bearer ' + this.apiKey);
-    xhr.setRequestHeader('Content-Type', 'application/json');
+    const headers = new Map([
+      ['Authorization', 'Bearer ' + this.apiKey],
+      ['Accept', 'application/json'],
+      ['Content-Type', 'application/json']
+    ]);
+
+    const callback = function (val, key) {
+      this.log.debug('setting', key, val);
+      xhr.setRequestHeader(key, val);
+    };
+
+    headers.forEach(callback.bind(this));
   }
 
   getRequest(url, callback) {
@@ -22,16 +39,20 @@ module.exports = class TandoorClient {
 
     xhr.open('GET', url);
     this.authenticateRequest(xhr);
+    xhr.withCredentials = false;
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300) {
         callback(null, JSON.parse(xhr.responseText));
       } else {
-        callback(new Error('HTTP ' + xhr.status));
+        callback(new Error('HTTP ' + xhr.status + ' ' + xhr.responseText));
       }
     };
     xhr.onerror = function() {
       callback(new Error('Network error'));
     };
+
+    this.log.debug('GET', url);
+
     xhr.send();
   }
 
@@ -40,16 +61,20 @@ module.exports = class TandoorClient {
 
     xhr.open('PATCH', url);
     this.authenticateRequest(xhr);
+    xhr.withCredentials = false;
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300) {
         callback(null, JSON.parse(xhr.responseText));
       } else {
-        callback(new Error('HTTP ' + xhr.status));
+        callback(new Error('HTTP ' + xhr.status + ' ' + xhr.responseText));
       }
     };
     xhr.onerror = function() {
       callback(new Error('Network error'));
     };
+
+    this.log.debug('PATCH', url, data);
+
     xhr.send(JSON.stringify(data));
   }
 

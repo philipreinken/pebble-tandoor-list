@@ -30,7 +30,8 @@
       "baseUrl",
       "apiToken",
       "shoppingList",
-      "shoppingListItem"
+      "shoppingListItem",
+      "shoppingListItemChecked"
     ],
   	"resources": {
       "media": []
