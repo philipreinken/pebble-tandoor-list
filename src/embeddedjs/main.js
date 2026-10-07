@@ -25,16 +25,6 @@ const message = new Message({
   },
   onWritable() {
     log.info("on writable");
-		if (this.once)
- 			return;
-
-		this.once = true;
-    const m = new Map;
-		m.set("COUNTER", 1000);
-
-    this.write(m);
-
-		log.info("wrote!");
   },
   onSuspend() {
     log.info("Messages suspended");
