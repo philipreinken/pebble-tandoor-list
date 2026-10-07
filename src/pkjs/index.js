@@ -103,7 +103,7 @@ function onReady(e) {
           log.info('retrieved shopping list', res.results);
 
           const items = res.results
-            .filter(i => !i.checked)
+            //.filter(i => !i.checked)
             .map(i => {
               return {
                 id: i.id,

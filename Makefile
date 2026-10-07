@@ -8,7 +8,12 @@ build/: clean
 .PHONY: debug
 debug: clean
 	pebble build --debug
+	pebble install --emulator="emery" --logs
 
 .PHONY: install
 install: build/
 	pebble install --emulator="emery" --logs
+
+.PHONY: cloud
+cloud: build/
+	pebble install --cloudpebble --logs
