@@ -53,8 +53,7 @@ func (m *TandoorList) BuildContainer(c context.Context) *dagger.Container {
 	return dag.Container().From(buildContainerBaseImage).
 		WithFile("/usr/local/bin/uv", dag.Container().From(uvContainerImage).File("/uv")).
 		WithExec([]string{"apt-get", "update"}).
-		WithExec([]string{"apt-get", "install", "-y", "python3", "python3-venv", "nodejs", "npm", "libsdl2-2.0-0", "libglib2.0-0", "libpixman-1-0", "zlib1g", "libsndio7.0"}).
-		With(m.withSourceDir(true))
+		WithExec([]string{"apt-get", "install", "-y", "python3", "python3-venv", "nodejs", "npm", "libsdl2-2.0-0", "libglib2.0-0", "libpixman-1-0", "zlib1g", "libsndio7.0"})
 }
 
 // BuildContainerWithBuildDependencies returns a container image with all build dependencies installed
@@ -67,7 +66,8 @@ func (m *TandoorList) BuildContainerWithBuildDependencies(c context.Context) *da
 // Build builds the app using the pebble-tool
 func (m *TandoorList) Build(c context.Context) *dagger.Container {
 	return m.BuildContainerWithBuildDependencies(c).
-		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "build", "-vvv"})
+		With(m.withSourceDir(true)).
+		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "build"})
 }
 
 func (m *TandoorList) withSourceDir(cwd bool) dagger.WithContainerFunc {
