@@ -17,3 +17,7 @@ install: build/
 .PHONY: cloud
 cloud: build/
 	pebble install --cloudpebble --logs
+
+.PHONY: config
+config:
+	pebble emu-app-config --emulator="emery"
