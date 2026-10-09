@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	buildContainerBaseImage = "debian@sha256:c85a2732e97694ea77237c61304b3bb410e0e961dd6ee945997a06c788c545bb"               // trixie-slim
+	buildContainerBaseImage = "debian@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f"               // trixie-slim
 	uvContainerImage        = "ghcr.io/astral-sh/uv@sha256:3af4716e991d6956a41e573eab705d0ee08500cd829ed30293eb8472f372c65a" // 0.12.24
 )
 
