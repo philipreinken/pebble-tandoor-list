@@ -29,7 +29,7 @@ type TandoorList struct {
 }
 
 func New(
-	// The source code to build the flatpak
+	// The source code from which to build
 	// +optional
 	Source *dagger.Directory,
 ) *TandoorList {

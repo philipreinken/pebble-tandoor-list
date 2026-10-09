@@ -22,7 +22,7 @@ jobs:
           version: "v0.21.4"
           verb: call
           args: >-
-            --source="."
+            --source "."
             build
             export --path="build/tandoor-list.pbw"
       - id: deployment
