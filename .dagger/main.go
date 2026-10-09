@@ -72,10 +72,10 @@ func (m *TandoorList) Build(c context.Context) *dagger.Container {
 
 func (m *TandoorList) withSourceDir(cwd bool) dagger.WithContainerFunc {
 	return func(c *dagger.Container) *dagger.Container {
-		ret := c.WithDirectory("/src", m.Source)
+		ret := c.WithDirectory("/app", m.Source)
 
 		if cwd {
-			return ret.WithWorkdir("/src")
+			return ret.WithWorkdir("/app")
 		}
 
 		return ret

@@ -29,8 +29,9 @@ jobs:
           args: >-
             --source="."
             build
-            export --path="build/tandoor-list.pbw"
-      - id: deployment
-        uses: actions/upload-pages-artifact@v4
+            file --path="build/app.pbw"
+            export --path="build/app.pbw"
+      - uses: actions/upload-artifact@v7
         with:
-          path: build/tandoor-list.pbw
+          path: "build/app.pbw"
+          archive: false
