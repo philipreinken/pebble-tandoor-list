@@ -1,8 +1,8 @@
 # tandoor-list
 
-Check your tandoor recipes shopping list on the go 📝
+> *Check your tandoor recipes shopping list on the go 📝*
 
-This app connects to a Tandoor instance, loads the current shopping list, and lets you mark items as checked directly from your Pebble watch.
+This app connects to a [Tandoor](https://tandoor.dev/) instance, loads the current shopping list, and lets you mark items as checked directly from your Pebble watch.
 
 <details><summary>Screenshot</summary>
 
