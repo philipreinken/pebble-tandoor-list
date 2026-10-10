@@ -19,18 +19,19 @@ const LIST_RIGHT_PADDING = 8;
 const SKIN_IDX_NORMAL = 0;
 const SKIN_IDX_SELECTED = 1;
 const SKIN_IDX_CHECKED = 2;
+const SKIN_IDX_WAITING = 3;
 
 const backgroundSkin = new Skin({ fill: "silver" });
 
 const listItemSkin = new Skin({
-  fill: ["white", "#00aaff", "white"] // SKIN_IDX_*
+  fill: ["white", "#00aaff", "white", "gray"] // SKIN_IDX_*
 });
 
 const listItemStyle = new Style({
   font: LIST_FONT,
   horizontal: "left",
   vertical: "middle",
-  color: ["black", "black", "gray"], // SKIN_IDX_*
+  color: ["black", "black", "gray", "black"], // SKIN_IDX_*
   left: LIST_LEFT_PADDING,
   right: LIST_RIGHT_PADDING
 });
@@ -53,14 +54,14 @@ class ListItemBehaviour extends Behavior {
 
     label.string = this.itemString();
 
-    if (this.isSelected) {
-      label.state = SKIN_IDX_SELECTED;
-    } else {
-      label.state = this.item.checked ? SKIN_IDX_CHECKED : SKIN_IDX_NORMAL;
-    }
-
     if (this.isWaiting) {
-      label.left = LIST_LEFT_PADDING * 2;
+      label.state = SKIN_IDX_WAITING;
+    } else {
+      if (this.isSelected) {
+        label.state = SKIN_IDX_SELECTED;
+      } else {
+        label.state = this.item.checked ? SKIN_IDX_CHECKED : SKIN_IDX_NORMAL;
+      }
     }
   }
 
@@ -70,14 +71,18 @@ class ListItemBehaviour extends Behavior {
   }
 
   onItemChecked(label, id, checked) {
-    if (this.item.id !== id) return;
-    this.item.checked = checked;
-    this.refresh();
+    if (this.item.id === id) {
+      this.item.checked = checked;
+      this.isWaiting = false;
+
+      this.refresh();
+    }
   }
 
   onListItemWaiting(label, id) {
     if (this.item.id === id) {
       this.isWaiting = true;
+
       this.refresh();
     }
   }
@@ -178,15 +183,13 @@ class ShoppingListBehaviour extends Behavior {
 
   onSelectionChanged() {
     const listItem = this.getItem(this.selected);
+    if (!listItem) return;
 
-    if (!listItem) {
-      return;
-    }
+    const center = listItem.offset.y + (listItem.height / 2);
+    const desired = center - (this.scroller.height / 2);
+    const max = Math.max(0, this.column.height - this.scroller.height);
 
-    const center = listItem.bounds.y + (listItem.height / 2);
-    const offset = Math.max(0, center - (this.scroller.height / 2));
-
-    this.scroller.scrollTo(0, offset);
+    this.scroller.scrollTo(0, Math.max(0, Math.min(desired, max)));
   }
 }
 
