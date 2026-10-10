@@ -9,52 +9,86 @@ const log = new Logger('WTCH');
 
 log.info('init');
 
-const backgroundSkin = new Skin({ fill: "silver" });
-const headerSkin = new Skin({ fill: "white" });
-const headerStyle = new Style({ font: "bold 18px Gothic", color: "black" });
-const listStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "black" });
-const paleListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "gray" });
-const selectedListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "red" });
+const SCREEN_WIDTH = 200;
+const SCREEN_HEIGHT = 228;
+const LIST_ITEM_HEIGHT = 56;
+const LIST_FONT = "bold 28px Gothic";
+const LIST_LEFT_PADDING = 8;
+const LIST_RIGHT_PADDING = 8;
 
-const LIST_ITEM_HEIGHT = 30;
+const SKIN_IDX_NORMAL = 0;
+const SKIN_IDX_SELECTED = 1;
+const SKIN_IDX_CHECKED = 2;
+
+const backgroundSkin = new Skin({ fill: "silver" });
+
+const listItemSkin = new Skin({
+  fill: ["white", "#00aaff", "white"] // SKIN_IDX_*
+});
+
+const listItemStyle = new Style({
+  font: LIST_FONT,
+  horizontal: "left",
+  vertical: "middle",
+  color: ["black", "black", "gray"], // SKIN_IDX_*
+  left: LIST_LEFT_PADDING,
+  right: LIST_RIGHT_PADDING
+});
 
 class ListItemBehaviour extends Behavior {
-  onCreate(subject, data) {
-    this.$ = subject;
+  onCreate(label, data) {
+    this.$ = label;
     this.item = data;
-
-    this.onItemChecked(this.$, this.item.id, this.item.checked);
+    this.isSelected = false;
+    this.isWaiting = false;
+    this.refresh();
   }
 
-  onSelectionChanged(subject, id) {
-    if (this.item.id === id) {
-      this.$.style = selectedListStyle;
-    } else if (this.item.checked) {
-      this.$.style = paleListStyle;
+  itemString() {
+    return `${this.item.checked ? '[x] ' : '[  ] '}${this.item.name}`;
+  }
+
+  refresh() {
+    const label = this.$;
+
+    label.string = this.itemString();
+
+    if (this.isSelected) {
+      label.state = SKIN_IDX_SELECTED;
     } else {
-      this.$.style = listStyle;
+      label.state = this.item.checked ? SKIN_IDX_CHECKED : SKIN_IDX_NORMAL;
+    }
+
+    if (this.isWaiting) {
+      label.left = LIST_LEFT_PADDING * 2;
     }
   }
 
-  onItemChecked(subject, id, checked) {
-    if (this.item.id === id) {
-      this.item.checked = checked;
-    }
-
-    this.$.style = (this.item.checked) ? paleListStyle : listStyle;
-    this.$.string = `${(this.item.checked ? '[x]' : '[  ]')} ${this.item.name}`;
+  onSelectionChanged(label, selectedId) {
+    this.isSelected = (this.item.id === selectedId);
+    this.refresh();
   }
 
-  onListItemWaiting(subject, id) {
+  onItemChecked(label, id, checked) {
+    if (this.item.id !== id) return;
+    this.item.checked = checked;
+    this.refresh();
+  }
+
+  onListItemWaiting(label, id) {
     if (this.item.id === id) {
-      this.$.string = `  ${this.$.string}`;
+      this.isWaiting = true;
+      this.refresh();
     }
   }
 }
 
 const ListItem = Label.template($ => ({
-  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+  left: 0, right: 0,
+  height: LIST_ITEM_HEIGHT,
   name: `item-${$.id}`,
+  skin: listItemSkin,
+  style: listItemStyle,
   Behavior: ListItemBehaviour
 }));
 
@@ -143,13 +177,16 @@ class ShoppingListBehaviour extends Behavior {
   }
 
   onSelectionChanged() {
-    let listItem = this.getItem(this.selected);
+    const listItem = this.getItem(this.selected);
 
     if (!listItem) {
       return;
     }
 
-    this.scroller.scrollTo(0, listItem.bounds.y);
+    const center = listItem.bounds.y + (listItem.height / 2);
+    const offset = Math.max(0, center - (this.scroller.height / 2));
+
+    this.scroller.scrollTo(0, offset);
   }
 }
 
@@ -157,7 +194,7 @@ const application = new Application(null, {
   skin: backgroundSkin,
   contents: [
     new Container(null, {
-      top: 0, bottom: 0, left: 6, right: 6,
+      top: 0, bottom: 0, left: 0, right: 0,
       contents: [
         new Scroller(null, {
           Behavior: ShoppingListBehaviour,
@@ -170,9 +207,10 @@ const application = new Application(null, {
               top: 0, left: 0, right: 0,
               contents: [
                 new Label(null, {
-                  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+                  left: 0, right: 0,
+                  height: LIST_ITEM_HEIGHT,
                   name: `loading-indicator`,
-                  style: listStyle,
+                  style: listItemStyle,
                   string: `Loading...`
                 })
               ]
