@@ -9,9 +9,7 @@
 			"./logger",
 			"./constants",
 			"./app",
-			"./handler",
-			"./messageHandler",
-			"./buttonHandler"
+			"./handler"
 		]
 	}
 }

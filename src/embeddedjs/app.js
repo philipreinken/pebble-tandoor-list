@@ -5,6 +5,8 @@ import { } from "piu/MC";
 
 const log = new Logger('WTCH');
 
+log.info('init');
+
 const backgroundSkin = new Skin({ fill: "silver" });
 const listItemSkin = new Skin({
   fill: ["white", "#00aaff", "white", "gray"] // SKIN_IDX_*
@@ -179,20 +181,20 @@ const ListItem = Label.template($ => ({
 const WatchApplication = Application.template($ => ({
   skin: backgroundSkin,
   contents: [
-    Container($, {
+    new Container(null, {
       top: 0, bottom: 0, left: 0, right: 0,
       contents: [
-        Scroller($, {
+        new Scroller(null, {
           Behavior: ShoppingListBehaviour,
           left: 0, right: 0, top: 0, bottom: 0,
           active: true,
           backgroundTouch: true,
           clip: true,
           contents: [
-            Column($, {
+            new Column(null, {
               top: 0, left: 0, right: 0,
               contents: [
-                Label($, {
+                new Label(null, {
                   left: 0, right: 0,
                   height: _.LIST_ITEM_HEIGHT,
                   name: `loading-indicator`,

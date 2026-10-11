@@ -2,10 +2,9 @@ import Message from "pebble/message";
 import Button from "pebble/button";
 
 import WatchApplication from "./app";
-import BuildMessageHandler from "./messageHandler";
-import BuildButtonHandler from "./buttonHandler";
+import { BuildMessageHandler, BuildButtonHandler } from "./handler";
 
-const application = new WatchApplication({}, {});
+const application = new WatchApplication();
 
 const messageHandler = BuildMessageHandler(application);
 const buttonHandler = BuildButtonHandler(application);
