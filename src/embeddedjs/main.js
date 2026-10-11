@@ -9,52 +9,93 @@ const log = new Logger('WTCH');
 
 log.info('init');
 
-const backgroundSkin = new Skin({ fill: "silver" });
-const headerSkin = new Skin({ fill: "white" });
-const headerStyle = new Style({ font: "bold 18px Gothic", color: "black" });
-const listStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "black" });
-const paleListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "gray" });
-const selectedListStyle = new Style({ font: "bold 24px Gothic", horizontal: "left", color: "red" });
+const SCREEN_WIDTH = 200;
+const SCREEN_HEIGHT = 228;
+const LIST_ITEM_HEIGHT = 56;
+const LIST_FONT = "bold 28px Gothic";
+const LIST_LEFT_PADDING = 8;
+const LIST_RIGHT_PADDING = 8;
 
-const LIST_ITEM_HEIGHT = 30;
+const SKIN_IDX_NORMAL = 0;
+const SKIN_IDX_SELECTED = 1;
+const SKIN_IDX_CHECKED = 2;
+const SKIN_IDX_WAITING = 3;
+
+const backgroundSkin = new Skin({ fill: "silver" });
+
+const listItemSkin = new Skin({
+  fill: ["white", "#00aaff", "white", "gray"] // SKIN_IDX_*
+});
+
+const listItemStyle = new Style({
+  font: LIST_FONT,
+  horizontal: "left",
+  vertical: "middle",
+  color: ["black", "black", "gray", "black"], // SKIN_IDX_*
+  left: LIST_LEFT_PADDING,
+  right: LIST_RIGHT_PADDING
+});
 
 class ListItemBehaviour extends Behavior {
-  onCreate(subject, data) {
-    this.$ = subject;
+  onCreate(label, data) {
+    this.$ = label;
     this.item = data;
+    this.isSelected = false;
+    this.isWaiting = false;
 
-    this.onItemChecked(this.$, this.item.id, this.item.checked);
+    this.refresh();
   }
 
-  onSelectionChanged(subject, id) {
-    if (this.item.id === id) {
-      this.$.style = selectedListStyle;
-    } else if (this.item.checked) {
-      this.$.style = paleListStyle;
+  itemString() {
+    return `${this.item.checked ? '[x] ' : '[  ] '}${this.item.name}`;
+  }
+
+  refresh() {
+    const label = this.$;
+
+    label.string = this.itemString();
+
+    if (this.isWaiting) {
+      label.state = SKIN_IDX_WAITING;
     } else {
-      this.$.style = listStyle;
+      if (this.isSelected) {
+        label.state = SKIN_IDX_SELECTED;
+      } else {
+        label.state = this.item.checked ? SKIN_IDX_CHECKED : SKIN_IDX_NORMAL;
+      }
     }
   }
 
-  onItemChecked(subject, id, checked) {
-    if (this.item.id === id) {
-      this.item.checked = checked;
-    }
+  onSelectionChanged(label, selectedId) {
+    this.isSelected = (this.item.id === selectedId);
 
-    this.$.style = (this.item.checked) ? paleListStyle : listStyle;
-    this.$.string = `${(this.item.checked ? '[x]' : '[  ]')} ${this.item.name}`;
+    this.refresh();
   }
 
-  onListItemWaiting(subject, id) {
+  onItemUpdateReceived(label, item) {
+    if (this.item.id === item.id) {
+      this.item = item;
+      this.isWaiting = false;
+
+      this.refresh();
+    }
+  }
+
+  onListItemWaiting(label, id) {
     if (this.item.id === id) {
-      this.$.string = `  ${this.$.string}`;
+      this.isWaiting = true;
+
+      this.refresh();
     }
   }
 }
 
 const ListItem = Label.template($ => ({
-  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+  left: 0, right: 0,
+  height: LIST_ITEM_HEIGHT,
   name: `item-${$.id}`,
+  skin: listItemSkin,
+  style: listItemStyle,
   Behavior: ListItemBehaviour
 }));
 
@@ -88,8 +129,8 @@ class ShoppingListBehaviour extends Behavior {
     if (listItem) {
       log.info('item present already', listItem);
 
-      this.column.distribute('onItemChecked', item.id, item.checked);
-    } else {
+      this.column.distribute('onItemUpdateReceived', item);
+    } else if (!item.checked) {
       this.column.add(ListItem(item));
     }
 
@@ -129,7 +170,7 @@ class ShoppingListBehaviour extends Behavior {
       return;
     }
 
-    const item = listItem.behavior.item;
+    const item = Object.assign({}, listItem.behavior.item);
 
     item.checked = !item.checked;
 
@@ -143,13 +184,14 @@ class ShoppingListBehaviour extends Behavior {
   }
 
   onSelectionChanged() {
-    let listItem = this.getItem(this.selected);
+    const listItem = this.getItem(this.selected);
+    if (!listItem) return;
 
-    if (!listItem) {
-      return;
-    }
+    const center = listItem.offset.y + (listItem.height / 2);
+    const desired = center - (this.scroller.height / 2);
+    const max = Math.max(0, this.column.height - this.scroller.height);
 
-    this.scroller.scrollTo(0, listItem.bounds.y);
+    this.scroller.scrollTo(0, Math.max(0, Math.min(desired, max)));
   }
 }
 
@@ -157,7 +199,7 @@ const application = new Application(null, {
   skin: backgroundSkin,
   contents: [
     new Container(null, {
-      top: 0, bottom: 0, left: 6, right: 6,
+      top: 0, bottom: 0, left: 0, right: 0,
       contents: [
         new Scroller(null, {
           Behavior: ShoppingListBehaviour,
@@ -170,9 +212,10 @@ const application = new Application(null, {
               top: 0, left: 0, right: 0,
               contents: [
                 new Label(null, {
-                  left: 0, right: 0, height: LIST_ITEM_HEIGHT,
+                  left: 0, right: 0,
+                  height: LIST_ITEM_HEIGHT,
                   name: `loading-indicator`,
-                  style: listStyle,
+                  style: listItemStyle,
                   string: `Loading...`
                 })
               ]
