@@ -28,3 +28,7 @@ ci-build/app.pbw:
 .PHONY: ci-install
 ci-install: ci-build/app.pbw
 	pebble install --emulator="emery" --logs $<
+
+.PHONY: ci-cloud
+ci-cloud: ci-build/app.pbw
+	pebble install --cloudpebble --logs $<
