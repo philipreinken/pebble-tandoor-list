@@ -32,7 +32,6 @@ module.exports = class Application {
         this.logger.debug('retrieved shopping list', res.results);
 
         const items = res.results
-          .filter(i => !i.checked)
           .map(i => {
             return {
               id: i.id,

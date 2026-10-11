@@ -42,6 +42,7 @@ class ListItemBehaviour extends Behavior {
     this.item = data;
     this.isSelected = false;
     this.isWaiting = false;
+
     this.refresh();
   }
 
@@ -67,12 +68,13 @@ class ListItemBehaviour extends Behavior {
 
   onSelectionChanged(label, selectedId) {
     this.isSelected = (this.item.id === selectedId);
+
     this.refresh();
   }
 
-  onItemChecked(label, id, checked) {
-    if (this.item.id === id) {
-      this.item.checked = checked;
+  onItemUpdateReceived(label, item) {
+    if (this.item.id === item.id) {
+      this.item = item;
       this.isWaiting = false;
 
       this.refresh();
@@ -127,8 +129,8 @@ class ShoppingListBehaviour extends Behavior {
     if (listItem) {
       log.info('item present already', listItem);
 
-      this.column.distribute('onItemChecked', item.id, item.checked);
-    } else {
+      this.column.distribute('onItemUpdateReceived', item);
+    } else if (!item.checked) {
       this.column.add(ListItem(item));
     }
 
@@ -168,7 +170,7 @@ class ShoppingListBehaviour extends Behavior {
       return;
     }
 
-    const item = listItem.behavior.item;
+    const item = Object.assign({}, listItem.behavior.item);
 
     item.checked = !item.checked;
 
