@@ -7,7 +7,11 @@
 		"*": [
 		  "./main",
 			"./logger",
-			"./constants"
+			"./constants",
+			"./app",
+			"./handler",
+			"./messageHandler",
+			"./buttonHandler"
 		]
 	}
 }
