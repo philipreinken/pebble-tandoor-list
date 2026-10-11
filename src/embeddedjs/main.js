@@ -132,12 +132,10 @@ class ShoppingListBehaviour extends Behavior {
       this.column.distribute('onItemUpdateReceived', item);
     } else if (!item.checked) {
       this.column.add(ListItem(item));
-    }
 
-    if (this.column.length < 2) {
-      this.selectItem(item.id);
-    } else if (this.selected) {
-      this.scroller.distribute('onSelectionChanged', this.selected);
+      if (this.column.length < 2) {
+        this.selectItem(item.id);
+      }
     }
   }
 
