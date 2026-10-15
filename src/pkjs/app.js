@@ -14,7 +14,6 @@ module.exports = class Application {
 
     this.logger = new Logger('APP');
     this.clay = new Clay(clayConfig);
-    this.tandoor = new TandoorClient(this.getBaseURL(), this.getApiToken(), new Logger('TNDR'));
 
     this.listeners = new Map([
       ['ready', this.onReady.bind(this)],
@@ -51,6 +50,7 @@ module.exports = class Application {
 
   onReady() {
     try {
+      this.tandoor = new TandoorClient(this.getBaseURL(), this.getApiToken(), new Logger('TNDR'));
       this.tandoor.getShoppingList(this.getShoppingListCallback.bind(this));
     } catch (err) {
       this.logger.error('onReady', err);
@@ -90,7 +90,7 @@ module.exports = class Application {
   onShowConfiguration(event) {
     this.logger.debug('showConfiguration');
 
-    const url = clay.generateUrl();
+    const url = this.clay.generateUrl();
 
     this.pebble.openURL(url);
   }
@@ -126,10 +126,14 @@ module.exports = class Application {
   /**
    * @param {Pebble} pebble
    */
-  registerListeners(pebble) {
-    this.listeners.forEach((callback, event) => {
-      pebble.addEventListener(event, callback);
-    });
+  registerListeners() {
+    const fn = function (callback, event) {
+      this.pebble.addEventListener(event, callback);
+    }
+
+    this.logger.info('registerListeners');
+
+    this.listeners.forEach(fn.bind(this));
   }
 
   /**

@@ -39,8 +39,8 @@ function BuildMessageHandler(application) {
     h.register(e, null);
   }
 
-  h.register(_.MSG_KEY_SHOPPING_LIST_ITEM, function (item) {
-    application.distribute(_.E_ON_SHOPPING_LIST_ITEM_RECEIVED, JSON.parse(item))
+  h.register(_.MSG_KEY_SHOPPING_LIST_ITEM, function (key, item) {
+    application.distribute(_.E_ON_SHOPPING_LIST_ITEM_RECEIVED, JSON.parse(item));
   });
 
   return h;

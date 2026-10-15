@@ -92,8 +92,8 @@ class ShoppingListBehaviour extends Behavior {
     this.scroller.distribute('onSelectionChanged', id);
   }
 
-  onShoppingListItemReceived(subject, item) {
-    log.info('onShoppingListItemReceived', subject, item);
+  [_.E_ON_SHOPPING_LIST_ITEM_RECEIVED](subject, item) {
+    log.info('shoppingListItemReceived', subject, item);
 
     const loadingIndicator = this.column.content('loading-indicator');
     const listItem = this.getItem(item.id);
@@ -115,7 +115,7 @@ class ShoppingListBehaviour extends Behavior {
     }
   }
 
-  onUpButton(subject) {
+  [_.E_ON_UP_BUTTON](subject) {
     log.info('onUpButton');
 
     const item = this.getItem(this.selected);
@@ -125,7 +125,7 @@ class ShoppingListBehaviour extends Behavior {
     }
   }
 
-  onDownButton(subject) {
+  [_.E_ON_DOWN_BUTTON](subject) {
     log.info('onDownButton');
 
     const item = this.getItem(this.selected);
@@ -135,7 +135,7 @@ class ShoppingListBehaviour extends Behavior {
     }
   }
 
-  onSelectButton(subject) {
+  [_.E_ON_SELECT_BUTTON](subject) {
     log.info('onSelectButton');
 
     const listItem = this.getItem(this.selected);
