@@ -1,3 +1,9 @@
 const Application = require('./app');
 
-(new Application(Pebble)).registerListeners(Pebble);
+try {
+  const app = new Application(Pebble);
+
+  app.registerListeners();
+} catch (e) {
+  console.log(e.toString());
+}
