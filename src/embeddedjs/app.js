@@ -21,6 +21,13 @@ const listItemStyle = new Style({
   right: _.LIST_RIGHT_PADDING
 });
 
+const glyphStyle = new Style({
+  font: _.LIST_FONT,
+  horizontal: "center",
+  vertical: "middle",
+  color: ["black", "black", "gray", "black"], // SKIN_IDX_*
+})
+
 class ListItemBehaviour extends Behavior {
   onCreate(container, data) {
     this.checkbox = container.content(_.ANCHOR_LIST_ITEM_CHECKBOX);
@@ -33,15 +40,18 @@ class ListItemBehaviour extends Behavior {
   }
 
   refresh() {
-    this.checkbox.string = (this.item.checked) ? 'x' : '';
+    this.checkbox.string = (this.item.checked) ? '\u2705' : '';
     this.label.string = this.item.name;
 
     if (this.isWaiting) {
+      this.checkbox.state = _.SKIN_IDX_WAITING;
       this.label.state = _.SKIN_IDX_WAITING;
     } else {
       if (this.isSelected) {
+        this.checkbox.state = _.SKIN_IDX_SELECTED;
         this.label.state = _.SKIN_IDX_SELECTED;
       } else {
+        this.checkbox.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
         this.label.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
       }
     }
@@ -175,15 +185,16 @@ const ListItem = Container.template($ => ({
     Label(null, {
       name: _.ANCHOR_LIST_ITEM_CHECKBOX,
       top: 0, left: 0,
-      width: _.LIST_ITEM_HEIGHT,
+      width: _.LIST_ITEM_HEIGHT / 2,
       height: _.LIST_ITEM_HEIGHT,
-      skin: new Skin({ fill: "blue" })
+      skin: listItemSkin,
+      style: glyphStyle
     }),
     Label(null, {
       name: _.ANCHOR_LIST_ITEM_LABEL,
-      top: 0, left: _.LIST_ITEM_HEIGHT, right: 0,
+      top: 0, left: _.LIST_ITEM_HEIGHT / 2, right: 0,
       height: _.LIST_ITEM_HEIGHT,
-      skin: new Skin({ fill: "red" })
+      skin: listItemSkin
     })
   ],
   Behavior: ListItemBehaviour
