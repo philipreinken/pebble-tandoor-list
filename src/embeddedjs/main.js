@@ -6,10 +6,9 @@ import { BuildMessageHandler, BuildButtonHandler } from "./handler";
 
 const application = new WatchApplication();
 
-const messageHandler = BuildMessageHandler(application);
-const buttonHandler = BuildButtonHandler(application);
+const messageHandler = BuildMessageHandler(application, null);
 
-new Message({
+const appMessage = new Message({
   keys: [ ...messageHandler.events() ],
   onReadable() {
     const msg = this.read();
@@ -20,7 +19,9 @@ new Message({
   }
 });
 
-new Button({
+const buttonHandler = BuildButtonHandler(application, appMessage);
+
+const appButton = new Button({
   types: [...buttonHandler.events()],
   onPush(down, type) {
     buttonHandler.call(type, down);

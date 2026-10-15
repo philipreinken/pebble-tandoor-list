@@ -32,7 +32,7 @@ class Handler {
  * @param application PiuApplication
  * @returns Handler
  */
-function BuildMessageHandler(application) {
+function BuildMessageHandler(application, appMessage) {
   const h = new Handler('message');
 
   for (const e of [_.MSG_KEY_BASE_URL, _.MSG_KEY_API_TOKEN, _.MSG_KEY_SHOPPING_LIST, _.MSG_KEY_SHOPPING_LIST_ITEM, _.MSG_KEY_SHOPPING_LIST_ITEM_CHECKED]) {
@@ -50,23 +50,23 @@ function BuildMessageHandler(application) {
  * @param application PiuApplication
  * @returns Handler
  */
-function BuildButtonHandler(application) {
+function BuildButtonHandler(application, appMessage) {
   const h = new Handler('button');
 
-  h.register('select', function (down) {
-    application.distribute((down > 0) ? _.E_ON_SELECT_BUTTON : _.E_ON_SELECT_BUTTON_UP);
+  h.register('select', function (key, down) {
+    application.distribute((down > 0) ? _.E_ON_SELECT_BUTTON : _.E_ON_SELECT_BUTTON_UP, appMessage);
   });
 
-  h.register('up', function (down) {
-    application.distribute((down > 0) ? _.E_ON_UP_BUTTON : _.E_ON_UP_BUTTON_UP);
+  h.register('up', function (key, down) {
+    application.distribute((down > 0) ? _.E_ON_UP_BUTTON : _.E_ON_UP_BUTTON_UP, appMessage);
   });
 
-  h.register('down', function (down) {
-    application.distribute((down > 0) ? _.E_ON_DOWN_BUTTON : _.E_ON_DOWN_BUTTON_UP);
+  h.register('down', function (key, down) {
+    application.distribute((down > 0) ? _.E_ON_DOWN_BUTTON : _.E_ON_DOWN_BUTTON_UP, appMessage);
   });
 
-  h.register('back', function (down) {
-    application.distribute((down > 0) ? _.E_ON_BACK_BUTTON : _.E_ON_BACK_BUTTON_UP);
+  h.register('back', function (key, down) {
+    application.distribute((down > 0) ? _.E_ON_BACK_BUTTON : _.E_ON_BACK_BUTTON_UP, appMessage);
   });
 
   return h;
