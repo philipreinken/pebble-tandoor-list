@@ -22,8 +22,9 @@ const listItemStyle = new Style({
 });
 
 class ListItemBehaviour extends Behavior {
-  onCreate(label, data) {
-    this.$ = label;
+  onCreate(container, data) {
+    this.checkbox = container.content(_.ANCHOR_LIST_ITEM_CHECKBOX);
+    this.label = container.content(_.ANCHOR_LIST_ITEM_LABEL);
     this.item = data;
     this.isSelected = false;
     this.isWaiting = false;
@@ -31,22 +32,17 @@ class ListItemBehaviour extends Behavior {
     this.refresh();
   }
 
-  itemString() {
-    return `${this.item.checked ? '[x] ' : '[  ] '}${this.item.name}`;
-  }
-
   refresh() {
-    const label = this.$;
-
-    label.string = this.itemString();
+    this.checkbox.string = (this.item.checked) ? 'x' : '';
+    this.label.string = this.item.name;
 
     if (this.isWaiting) {
-      label.state = _.SKIN_IDX_WAITING;
+      this.label.state = _.SKIN_IDX_WAITING;
     } else {
       if (this.isSelected) {
-        label.state = _.SKIN_IDX_SELECTED;
+        this.label.state = _.SKIN_IDX_SELECTED;
       } else {
-        label.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
+        this.label.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
       }
     }
   }
@@ -135,7 +131,7 @@ class ShoppingListBehaviour extends Behavior {
     }
   }
 
-  [_.E_ON_SELECT_BUTTON](subject) {
+  [_.E_ON_SELECT_BUTTON](subject, appMessage) {
     log.info('onSelectButton');
 
     const listItem = this.getItem(this.selected);
@@ -152,7 +148,7 @@ class ShoppingListBehaviour extends Behavior {
 
     log.info('checking', msg);
 
-    message.write(new Map([msg]));
+    appMessage.write(new Map([msg]));
 
     this.column.distribute('onListItemWaiting', item.id);
   }
@@ -169,12 +165,27 @@ class ShoppingListBehaviour extends Behavior {
   }
 }
 
-const ListItem = Label.template($ => ({
+const ListItem = Container.template($ => ({
   left: 0, right: 0,
   height: _.LIST_ITEM_HEIGHT,
   name: `item-${$.id}`,
   skin: listItemSkin,
   style: listItemStyle,
+  contents: [
+    Label(null, {
+      name: _.ANCHOR_LIST_ITEM_CHECKBOX,
+      top: 0, left: 0,
+      width: _.LIST_ITEM_HEIGHT,
+      height: _.LIST_ITEM_HEIGHT,
+      skin: new Skin({ fill: "blue" })
+    }),
+    Label(null, {
+      name: _.ANCHOR_LIST_ITEM_LABEL,
+      top: 0, left: _.LIST_ITEM_HEIGHT, right: 0,
+      height: _.LIST_ITEM_HEIGHT,
+      skin: new Skin({ fill: "red" })
+    })
+  ],
   Behavior: ListItemBehaviour
 }));
 
