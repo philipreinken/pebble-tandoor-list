@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 	"dagger/tandoor-list/internal/dagger"
+	"fmt"
+	"strings"
 )
 
 const (
@@ -32,15 +34,24 @@ func New(
 	// The source code from which to build
 	// +optional
 	Source *dagger.Directory,
+	// The git tag from which to build
+	// +optional
+	Tag string,
 ) *TandoorList {
 	if Source == nil {
-		Source = dag.Git(
+		git := dag.Git(
 			"https://github.com/philipreinken/pebble-tandoor-list.git",
-		).
-			Branch("main").
-			Tree(dagger.GitRefTreeOpts{
-				DiscardGitDir: false,
-			})
+		)
+
+		gitRef := git.Branch("main")
+
+		if len(Tag) > 0 {
+			gitRef = git.Tag(Tag)
+		}
+
+		Source = gitRef.Tree(dagger.GitRefTreeOpts{
+			DiscardGitDir: false,
+		})
 	}
 
 	return &TandoorList{
@@ -68,6 +79,17 @@ func (m *TandoorList) Build(c context.Context) *dagger.Container {
 	return m.BuildContainerWithBuildDependencies(c).
 		With(m.withSourceDir(true)).
 		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "build"})
+}
+
+func (m *TandoorList) Publish(c context.Context, idToken dagger.Secret) (*dagger.Container, error) {
+	ref, _ := m.Source.AsGit().Head().Ref(c)
+	if !strings.HasPrefix(ref, "v") {
+		return nil, fmt.Errorf("Not on a version ref, exiting...")
+	}
+
+	return m.Build(c).
+		WithSecretVariable("PEBBLE_FIREBASE_ID_TOKEN", &idToken).
+		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "publish", "--non-interactive", "--no-gif-all-platforms", "--screenshots", "emery_screenshot.png", "--replace-screenshots"}), nil
 }
 
 func (m *TandoorList) withSourceDir(cwd bool) dagger.WithContainerFunc {
