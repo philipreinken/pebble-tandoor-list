@@ -6,7 +6,7 @@ This app connects to a [Tandoor](https://tandoor.dev/) instance, loads the curre
 
 <details><summary>Screenshot</summary>
 
-![](./screenshot.png)
+![](./emery_screenshot.png)
 
 </details>
 
