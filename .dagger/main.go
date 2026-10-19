@@ -17,8 +17,6 @@ package main
 import (
 	"context"
 	"dagger/tandoor-list/internal/dagger"
-	"fmt"
-	"strings"
 )
 
 const (
@@ -82,11 +80,6 @@ func (m *TandoorList) Build(c context.Context) *dagger.Container {
 }
 
 func (m *TandoorList) Publish(c context.Context, idToken dagger.Secret) (*dagger.Container, error) {
-	ref, _ := m.Source.AsGit().Head().Ref(c)
-	if !strings.HasPrefix(ref, "v") {
-		return nil, fmt.Errorf("Not on a version ref, exiting...")
-	}
-
 	return m.Build(c).
 		WithSecretVariable("PEBBLE_FIREBASE_ID_TOKEN", &idToken).
 		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "publish", "--non-interactive", "--no-gif-all-platforms", "--screenshots", "emery_screenshot.png", "--replace-screenshots"}), nil
