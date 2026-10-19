@@ -71,7 +71,7 @@ module.exports = class Application {
         id: res.id,
         name: res.food.name,
         checked: res.checked,
-        unit: res.unit.name,
+        unit: (res.unit) ? res.unit.name : null,
         amount: res.amount
       }], 0)
     }

@@ -23,11 +23,12 @@ const listItemStyle = new Style({
 
 const listItemQuantityStyle = new Style({
   font: _.LIST_FONT_SMALL,
-  horizontal: "right",
+  horizontal: "left",
   vertical: "middle",
   color: ["#9e9e9e", "#00679e", "#9e9e9e", "#9e9e9e"], // SKIN_IDX_*
   left: _.LIST_LEFT_PADDING,
-  right: _.LIST_RIGHT_PADDING
+  right: _.LIST_RIGHT_PADDING,
+  bottom: _.LIST_LEFT_PADDING / 2
 });
 
 const glyphStyle = new Style({
