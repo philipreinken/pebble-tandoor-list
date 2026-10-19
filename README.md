@@ -37,4 +37,4 @@ make ci-install # run the ci build and install the result in the local emulator
 
 ## Is this vibecoded?
 
-No! I take full responsibility for shitty code; all done by hand, like way back in the dark ages 🧙‍♂️
+No, I take full responsibility for questionable code; all coded manually, like way back in the dark ages 🧙‍♂️
