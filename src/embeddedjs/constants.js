@@ -10,6 +10,7 @@ const Constants = {
   SCREEN_HEIGHT: 228,
   LIST_ITEM_HEIGHT: 44,
   LIST_FONT: "bold 28px Gothic",
+  LIST_FONT_SMALL: "bold 14px Gothic",
   LIST_LEFT_PADDING: 8,
   LIST_RIGHT_PADDING: 8,
   SKIN_IDX_NORMAL: 0,
@@ -18,6 +19,7 @@ const Constants = {
   SKIN_IDX_WAITING: 3,
   ANCHOR_LIST_ITEM_CHECKBOX: 'listItemCheckbox',
   ANCHOR_LIST_ITEM_LABEL: 'listItemLabel',
+  ANCHOR_LIST_ITEM_QTY: 'listItemQuantity',
   // Events
   E_ON_SHOPPING_LIST_ITEM_RECEIVED: 'shoppingListItemReceived',
   E_ON_SELECT_BUTTON: 'onSelectButton',

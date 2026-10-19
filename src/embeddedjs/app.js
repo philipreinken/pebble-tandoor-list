@@ -21,6 +21,15 @@ const listItemStyle = new Style({
   right: _.LIST_RIGHT_PADDING
 });
 
+const listItemQuantityStyle = new Style({
+  font: _.LIST_FONT_SMALL,
+  horizontal: "right",
+  vertical: "middle",
+  color: ["#9e9e9e", "#00679e", "#9e9e9e", "#9e9e9e"], // SKIN_IDX_*
+  left: _.LIST_LEFT_PADDING,
+  right: _.LIST_RIGHT_PADDING
+});
+
 const glyphStyle = new Style({
   font: _.LIST_FONT,
   horizontal: "center",
@@ -32,6 +41,7 @@ class ListItemBehaviour extends Behavior {
   onCreate(container, data) {
     this.checkbox = container.content(_.ANCHOR_LIST_ITEM_CHECKBOX);
     this.label = container.content(_.ANCHOR_LIST_ITEM_LABEL);
+    this.quantity = container.content(_.ANCHOR_LIST_ITEM_QTY);
     this.item = data;
     this.isSelected = false;
     this.isWaiting = false;
@@ -42,17 +52,21 @@ class ListItemBehaviour extends Behavior {
   refresh() {
     this.checkbox.string = (this.item.checked) ? '\u2705' : '';
     this.label.string = this.item.name;
+    this.quantity.string = `${(this.item.amount) > 0 ? this.item.amount : ''}${(this.item.unit) ? this.item.unit : ''}`
 
     if (this.isWaiting) {
       this.checkbox.state = _.SKIN_IDX_WAITING;
       this.label.state = _.SKIN_IDX_WAITING;
+      this.quantity.state = _.SKIN_IDX_WAITING;
     } else {
       if (this.isSelected) {
         this.checkbox.state = _.SKIN_IDX_SELECTED;
         this.label.state = _.SKIN_IDX_SELECTED;
+        this.quantity.state = _.SKIN_IDX_SELECTED;
       } else {
         this.checkbox.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
         this.label.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
+        this.quantity.state = this.item.checked ? _.SKIN_IDX_CHECKED : _.SKIN_IDX_NORMAL;
       }
     }
   }
@@ -193,8 +207,15 @@ const ListItem = Container.template($ => ({
     Label(null, {
       name: _.ANCHOR_LIST_ITEM_LABEL,
       top: 0, left: _.LIST_ITEM_HEIGHT / 2, right: 0,
-      height: _.LIST_ITEM_HEIGHT,
+      height: Math.floor(_.LIST_ITEM_HEIGHT * 0.66),
       skin: listItemSkin
+    }),
+    Label(null, {
+      name: _.ANCHOR_LIST_ITEM_QTY,
+      top: Math.floor(_.LIST_ITEM_HEIGHT * 0.66), left: _.LIST_ITEM_HEIGHT / 2, right: 0,
+      height: Math.ceil(_.LIST_ITEM_HEIGHT * 0.33),
+      skin: listItemSkin,
+      style: listItemQuantityStyle
     })
   ],
   Behavior: ListItemBehaviour
