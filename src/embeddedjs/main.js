@@ -21,7 +21,7 @@ const appMessage = new Message({
 
 const buttonHandler = BuildButtonHandler(application, appMessage);
 
-const appButton = new Button({
+new Button({
   types: [...buttonHandler.events()],
   onPush(down, type) {
     buttonHandler.call(type, down);

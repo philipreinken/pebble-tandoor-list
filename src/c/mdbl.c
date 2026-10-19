@@ -6,13 +6,20 @@ int main(void) {
 
 #ifdef PBL_DEBUG
   // Built with `pebble build --debug`: enable the xsbug JavaScript debugger.
-  ModdableCreationRecord cr = {
-    .recordSize = sizeof(cr),
-    .flags = kModdableCreationFlagDebug,
-  };
-  moddable_createMachine(&cr);
+  moddable_createMachine(&(ModdableCreationRecord){
+    .recordSize = sizeof(ModdableCreationRecord),
+    .chunk = 24576,
+    .slot = 49152,
+    .stack = 8192,
+    .flags = kModdableCreationFlagDebug
+  });
 #else
-  moddable_createMachine(NULL);
+  moddable_createMachine(&(ModdableCreationRecord){
+    .recordSize = sizeof(ModdableCreationRecord),
+    .chunk = 24576,
+    .slot = 49152,
+    .stack = 8192
+  });
 #endif
 
   window_destroy(w);
