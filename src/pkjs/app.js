@@ -32,10 +32,14 @@ module.exports = class Application {
 
         const items = res.results
           .map(i => {
+            this.logger.info('retrieved item', i);
+
             return {
               id: i.id,
               name: i.food.name,
-              checked: i.checked
+              checked: i.checked,
+              unit: (i.unit) ? i.unit.name : null,
+              amount: i.amount
             }
           });
 
@@ -63,7 +67,13 @@ module.exports = class Application {
     } else {
       this.logger.info('entry toggled', res);
 
-      this.onReady();
+      this.sendSequentially(Constants.MSG_KEY_SHOPPING_LIST_ITEM, [{
+        id: res.id,
+        name: res.food.name,
+        checked: res.checked,
+        unit: res.unit.name,
+        amount: res.amount
+      }], 0)
     }
   }
 
