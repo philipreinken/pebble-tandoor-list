@@ -79,10 +79,38 @@ func (m *TandoorList) Build(c context.Context) *dagger.Container {
 		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "build"})
 }
 
+func (m *TandoorList) FirebaseIdToken(c context.Context, apiKey, refreshToken dagger.Secret) (*dagger.Secret, error) {
+	a, err := apiKey.Plaintext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := refreshToken.Plaintext(c)
+	if err != nil {
+		return nil, err
+	}
+
+	idToken, err := RefreshFirebaseIDToken(c, a, r)
+	if err != nil {
+		return nil, err
+	}
+
+	return dag.SetSecret("idToken", idToken), nil
+}
+
 func (m *TandoorList) Publish(c context.Context, idToken dagger.Secret) (*dagger.Container, error) {
 	return m.Build(c).
 		WithSecretVariable("PEBBLE_FIREBASE_ID_TOKEN", &idToken).
 		WithExec([]string{"uv", "tool", "run", "--from", "pebble-tool", "pebble", "publish", "--non-interactive", "--no-gif-all-platforms", "--screenshots", "emery_screenshot.png", "--replace-screenshots"}), nil
+}
+
+func (m *TandoorList) PublishWithToken(c context.Context, apiKey, refreshToken dagger.Secret) (*dagger.Container, error) {
+	idToken, err := m.FirebaseIdToken(c, apiKey, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	return m.Publish(c, *idToken)
 }
 
 func (m *TandoorList) withSourceDir(cwd bool) dagger.WithContainerFunc {
