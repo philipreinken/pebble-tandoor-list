@@ -22,10 +22,10 @@ const listItemStyle = new Style({
 });
 
 const listItemQuantityStyle = new Style({
-  font: _.LIST_FONT_SMALL,
+  font: _.LIST_FONT,
   horizontal: "left",
   vertical: "middle",
-  color: ["#9e9e9e", "#00679e", "#9e9e9e", "#9e9e9e"], // SKIN_IDX_*
+  color: ["#9e9e9e", "#00679e", "#9e9e9e", "#606060"], // SKIN_IDX_*
   left: _.LIST_LEFT_PADDING,
   right: _.LIST_RIGHT_PADDING,
   bottom: _.LIST_LEFT_PADDING / 2
@@ -208,13 +208,13 @@ const ListItem = Container.template($ => ({
     Label(null, {
       name: _.ANCHOR_LIST_ITEM_LABEL,
       top: 0, left: _.LIST_ITEM_HEIGHT / 2, right: 0,
-      height: Math.floor(_.LIST_ITEM_HEIGHT * 0.66),
+      height: _.LIST_ITEM_HEIGHT / 2,
       skin: listItemSkin
     }),
     Label(null, {
       name: _.ANCHOR_LIST_ITEM_QTY,
-      top: Math.floor(_.LIST_ITEM_HEIGHT * 0.66), left: _.LIST_ITEM_HEIGHT / 2, right: 0,
-      height: Math.ceil(_.LIST_ITEM_HEIGHT * 0.33),
+      top: _.LIST_ITEM_HEIGHT / 2, left: _.LIST_ITEM_HEIGHT / 2, right: 0,
+      height: _.LIST_ITEM_HEIGHT / 2,
       skin: listItemSkin,
       style: listItemQuantityStyle
     })
