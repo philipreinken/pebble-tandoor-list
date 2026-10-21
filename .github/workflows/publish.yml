@@ -15,11 +15,13 @@ jobs:
       - uses: actions/checkout@v7
       - uses: dagger/dagger-for-github@27b130bf0f79a7f6fbbbe0fbca6760dc9bb40a77 # v8.4.1
         env:
-          PEBBLE_FIREBASE_ID_TOKEN: ${{ secrets.PEBBLE_FIREBASE_ID_TOKEN }}
+          PEBBLE_FIREBASE_API_KEY: ${{ secrets.PEBBLE_FIREBASE_API_KEY }}
+          PEBBLE_FIREBASE_REFRESH_TOKEN: ${{ secrets.PEBBLE_FIREBASE_REFRESH_TOKEN }}
         with:
           version: "v0.21.4"
           verb: call
           args: >-
             --tag=${{ github.ref_name }}
-            publish
-            --id-token="env:PEBBLE_FIREBASE_ID_TOKEN"
+            publish-with-token
+            --api-key="env:PEBBLE_FIREBASE_API_KEY"
+            --refresh-token="env:PEBBLE_FIREBASE_REFRESH_TOKEN"
