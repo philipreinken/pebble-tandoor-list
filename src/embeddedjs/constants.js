@@ -8,7 +8,7 @@ const Constants = {
   // UI
   SCREEN_WIDTH: 200,
   SCREEN_HEIGHT: 228,
-  LIST_ITEM_HEIGHT: 44,
+  LIST_ITEM_HEIGHT: 56,
   LIST_FONT: "bold 28px Gothic",
   LIST_FONT_SMALL: "bold 14px Gothic",
   LIST_LEFT_PADDING: 8,
