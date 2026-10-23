@@ -60,6 +60,7 @@ func New(
 // BuildContainer returns a container image with all dependencies
 func (m *TandoorList) BuildContainer(c context.Context) *dagger.Container {
 	return dag.Container().From(buildContainerBaseImage).
+		WithEnvVariable("DEBIAN_FRONTEND", "noninteractive").
 		WithFile("/usr/local/bin/uv", dag.Container().From(uvContainerImage).File("/uv")).
 		WithExec([]string{"apt-get", "update"}).
 		WithExec([]string{"apt-get", "install", "-y", "python3", "python3-venv", "nodejs", "npm", "libsdl2-2.0-0", "libglib2.0-0", "libpixman-1-0", "zlib1g", "libsndio7.0"})
